@@ -11,7 +11,7 @@ import com.klef.dev.entity.Book;
 import com.klef.dev.service.BookService;
 
 @RestController
-@RequestMapping("/springbootbookmanagementapi")
+@RequestMapping("/bookapi/")
 
 @CrossOrigin(origins = "*")
 public class BookController {
