@@ -20,6 +20,8 @@ const BookManager = () => {
   const [searchId, setSearchId] = useState('');
   const [deleteId, setDeleteId] = useState('');
   const [viewBook, setViewBook] = useState(null);
+  
+  const baseUrl = `${config.url}/bookapi`;
 
   useEffect(() => {
     fetchBooks();
@@ -31,7 +33,7 @@ const BookManager = () => {
       setBooks(response.data);
     } catch (error) {
       console.error('Error fetching books:', error);
-      // setMessage('Failed to fetch books.');
+      setMessage('Failed to fetch books.');
     }
   };
 
