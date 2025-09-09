@@ -531,3 +531,5 @@ Caused by: org.codehaus.plexus.util.xml.pull.XmlPullParserException: unexpected 
 2025-09-05 19:17:39,268 [Worker-77: Building] INFO  o.e.m.w.i.f.ResourceFilteringBuildParticipant - Changed resources require a complete clean of filtered resources of BookManagementAPI-SPRINGBOOT
 2025-09-05 19:17:39,268 [Worker-77: Building] INFO  o.e.m.w.i.f.ResourceFilteringBuildParticipant - Executing resource filtering for BookManagementAPI-SPRINGBOOT
 2025-09-05 21:10:56,772 [Worker-8: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is up-to-date. Trying to read.
+2025-09-09 14:50:40,261 [Worker-7: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is out-of-date. Trying to update.
+2025-09-09 20:00:34,439 [Worker-4: Loading available Gradle versions] INFO  o.e.b.c.i.u.g.PublishedGradleVersions - Gradle version information cache is up-to-date. Trying to read.

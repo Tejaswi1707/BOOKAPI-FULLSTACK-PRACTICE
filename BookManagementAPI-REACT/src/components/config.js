@@ -1,4 +1,4 @@
 const config = {
-    url: "http://localhost:1500/springbootbookmanagementapi"
+    url: "http://localhost:2030/springbootbookmanagementapi"
 };
 export default config;
