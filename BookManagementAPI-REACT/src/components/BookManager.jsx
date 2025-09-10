@@ -15,25 +15,23 @@ const BookManager = () => {
     year: '',
     copies: ''
   });
-  const [editMode, setEditMode] = useState(false);
+  const [idToFetch, setIdToFetch] = useState('');
+  const [fetchedBook, setFetchedBook] = useState(null);
   const [message, setMessage] = useState('');
-  const [searchId, setSearchId] = useState('');
-  const [deleteId, setDeleteId] = useState('');
-  const [viewBook, setViewBook] = useState(null);
-  
+  const [editMode, setEditMode] = useState(false);
+
   const baseUrl = `${config.url}/bookapi`;
 
   useEffect(() => {
-    fetchBooks();
+    fetchAllBooks();
   }, []);
 
-  const fetchBooks = async () => {
+  const fetchAllBooks = async () => {
     try {
-      const response = await axios.get(`${config.url}/all`);
-      setBooks(response.data);
+      const res = await axios.get(`${baseUrl}/all`);
+      setBooks(res.data);
     } catch (error) {
-      console.error('Error fetching books:', error);
-      setMessage('Failed to fetch books.');
+      setMessage('Error fetching books.');
     }
   };
 
@@ -43,7 +41,6 @@ const BookManager = () => {
 
   const validateForm = () => {
     for (let key in book) {
-      if (!editMode && key === 'id') continue; 
       if (!book[key] || book[key].toString().trim() === '') {
         setMessage(`Please fill out the ${key} field.`);
         return false;
@@ -52,169 +49,165 @@ const BookManager = () => {
     return true;
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const addBook = async () => {
     if (!validateForm()) return;
-
     try {
-      if (editMode) {
-        await axios.put(`${config.url}/update`, book);
-        setMessage('Book updated successfully!');
-      } else {
-        await axios.post(`${config.url}/add`, book);
-        setMessage('Book added successfully!');
-      }
-      setBook({ id: '', title: '', author: '', publisher: '', category: '', isbn: '', year: '', copies: '' });
-      setEditMode(false);
-      fetchBooks();
+      await axios.post(`${baseUrl}/add`, book);
+      setMessage('Book added successfully.');
+      fetchAllBooks();
+      resetForm();
     } catch (error) {
-      console.error('Error saving book:', error);
-      setMessage('Operation failed.');
+      setMessage('Error adding book.');
+    }
+  };
+
+  const updateBook = async () => {
+    if (!validateForm()) return;
+    try {
+      await axios.put(`${baseUrl}/update`, book);
+      setMessage('Book updated successfully.');
+      fetchAllBooks();
+      resetForm();
+    } catch (error) {
+      setMessage('Error updating book.');
+    }
+  };
+
+  const deleteBook = async (id) => {
+    try {
+      const res = await axios.delete(`${baseUrl}/delete/${id}`);
+      setMessage(res.data || 'Book deleted successfully.');
+      fetchAllBooks();
+    } catch (error) {
+      setMessage('Error deleting book.');
+    }
+  };
+
+  const getBookById = async () => {
+    try {
+      const res = await axios.get(`${baseUrl}/get/${idToFetch}`);
+      setFetchedBook(res.data);
+      setMessage('');
+    } catch (error) {
+      setFetchedBook(null);
+      setMessage('Book not found.');
     }
   };
 
   const handleEdit = (b) => {
     setBook(b);
     setEditMode(true);
-    setMessage('');
+    setMessage(`Editing book with ID ${b.id}`);
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this book?')) {
-      try {
-        await axios.delete(`${config.url}/delete/${id}`);
-        setMessage('Book deleted successfully!');
-        fetchBooks();
-      } catch (error) {
-        console.error('Error deleting book:', error);
-        setMessage('Delete failed.');
-      }
-    }
-  };
-
-  const handleDeleteById = async () => {
-    if (!deleteId.trim()) {
-      setMessage('Please enter a Book ID to delete.');
-      return;
-    }
-
-    if (window.confirm(`Are you sure you want to delete book with ID ${deleteId}?`)) {
-      try {
-        await axios.delete(`${config.url}/delete/${deleteId}`);
-        setMessage('Book deleted successfully!');
-        setDeleteId('');
-        fetchBooks();
-      } catch (error) {
-        console.error('Error deleting book by ID:', error);
-        setMessage('Book not found or delete failed.');
-      }
-    }
-  };
-
-  const handleViewById = async () => {
-    if (!searchId.trim()) {
-      setMessage('Please enter a Book ID.');
-      setViewBook(null);
-      return;
-    }
-
-    try {
-      const response = await axios.get(`${config.url}/get/${searchId}`);
-      setViewBook(response.data);
-      setMessage('');
-    } catch (error) {
-      console.error('Error fetching book by ID:', error);
-      setMessage('Book not found.');
-      setViewBook(null);
-    }
+  const resetForm = () => {
+    setBook({
+      id: '',
+      title: '',
+      author: '',
+      publisher: '',
+      category: '',
+      isbn: '',
+      year: '',
+      copies: ''
+    });
+    setEditMode(false);
   };
 
   return (
     <div className="book-container">
-      <h2>Book Manager</h2>
-      {message && <p className="message">{message}</p>}
-
-      {/* Add / Update Form */}
-      <form onSubmit={handleSubmit}>
-        {!editMode && <input type="text" name="id" placeholder="ID" value={book.id} onChange={handleChange} />}
-        <input type="text" name="title" placeholder="Title" value={book.title} onChange={handleChange} />
-        <input type="text" name="author" placeholder="Author" value={book.author} onChange={handleChange} />
-        <input type="text" name="publisher" placeholder="Publisher" value={book.publisher} onChange={handleChange} />
-        <input type="text" name="category" placeholder="Category" value={book.category} onChange={handleChange} />
-        <input type="text" name="isbn" placeholder="ISBN" value={book.isbn} onChange={handleChange} />
-        <input type="number" name="year" placeholder="Year" value={book.year} onChange={handleChange} />
-        <input type="number" name="copies" placeholder="Copies" value={book.copies} onChange={handleChange} />
-        <button className="btn btn-blue" type="submit">{editMode ? 'Update Book' : 'Add Book'}</button>
-        {editMode && (
-          <button
-            className="btn btn-gray"
-            type="button"
-            onClick={() => {
-              setBook({ id: '', title: '', author: '', publisher: '', category: '', isbn: '', year: '', copies: '' });
-              setEditMode(false);
-            }}
-          >
-            Cancel
-          </button>
-        )}
-      </form>
-
-      {/* View by ID */}
-      <h3>View Book by ID</h3>
-      <input type="text" placeholder="Enter Book ID" value={searchId} onChange={(e) => setSearchId(e.target.value)} />
-      <button className="btn btn-blue" onClick={handleViewById}>View</button>
-
-      {viewBook && (
-        <div className="book-view">
-          <p><strong>ID:</strong> {viewBook.id}</p>
-          <p><strong>Title:</strong> {viewBook.title}</p>
-          <p><strong>Author:</strong> {viewBook.author}</p>
-          <p><strong>Publisher:</strong> {viewBook.publisher}</p>
-          <p><strong>Category:</strong> {viewBook.category}</p>
-          <p><strong>ISBN:</strong> {viewBook.isbn}</p>
-          <p><strong>Year:</strong> {viewBook.year}</p>
-          <p><strong>Copies:</strong> {viewBook.copies}</p>
+      {message && (
+        <div
+          className={`message-banner ${
+            message.toLowerCase().includes('error') ? 'error' : 'success'
+          }`}
+        >
+          {message}
         </div>
       )}
 
-      {/* Delete by ID */}
-      <h3>Delete Book by ID</h3>
-      <input type="text" placeholder="Enter Book ID to delete" value={deleteId} onChange={(e) => setDeleteId(e.target.value)} />
-      <button className="btn btn-red" onClick={handleDeleteById}>Delete</button>
+      <h2>Book Management</h2>
 
-      {/* Book List */}
-      <h3>Book List</h3>
-      {books.length === 0 ? (
-        <p>No books available</p>
-      ) : (
-        <table className="book-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>Title</th>
-              <th>Author</th>
-              <th>Year</th>
-              <th>Copies</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {books.map((b) => (
-              <tr key={b.id}>
-                <td>{b.id}</td>
-                <td>{b.title}</td>
-                <td>{b.author}</td>
-                <td>{b.year}</td>
-                <td>{b.copies}</td>
-                <td>
-                  <button className="btn btn-green" onClick={() => handleEdit(b)}>Edit</button>
-                  <button className="btn btn-red" onClick={() => handleDelete(b.id)}>Delete</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
+      {/* Add / Edit Form */}
+      <div>
+        <h3>{editMode ? 'Edit Book' : 'Add Book'}</h3>
+        <div className="form-grid">
+          <input type="number" name="id" placeholder="ID" value={book.id} onChange={handleChange} />
+          <input type="text" name="title" placeholder="Title" value={book.title} onChange={handleChange} />
+          <input type="text" name="author" placeholder="Author" value={book.author} onChange={handleChange} />
+          <input type="text" name="publisher" placeholder="Publisher" value={book.publisher} onChange={handleChange} />
+          <input type="text" name="category" placeholder="Category" value={book.category} onChange={handleChange} />
+          <input type="text" name="isbn" placeholder="ISBN" value={book.isbn} onChange={handleChange} />
+          <input type="number" name="year" placeholder="Year" value={book.year} onChange={handleChange} />
+          <input type="number" name="copies" placeholder="Copies" value={book.copies} onChange={handleChange} />
+        </div>
+
+        <div className="btn-group">
+          {!editMode ? (
+            <button className="btn-blue" onClick={addBook}>Add Book</button>
+          ) : (
+            <>
+              <button className="btn-green" onClick={updateBook}>Update Book</button>
+              <button className="btn-gray" onClick={resetForm}>Cancel</button>
+            </>
+          )}
+        </div>
+      </div>
+
+      {/* Fetch by ID */}
+      <div>
+        <h3>Get Book By ID</h3>
+        <input
+          type="number"
+          value={idToFetch}
+          onChange={(e) => setIdToFetch(e.target.value)}
+          placeholder="Enter ID"
+        />
+        <button className="btn-blue" onClick={getBookById}>Fetch</button>
+
+        {fetchedBook && (
+          <div>
+            <h4>Book Found:</h4>
+            <pre>{JSON.stringify(fetchedBook, null, 2)}</pre>
+          </div>
+        )}
+      </div>
+
+      {/* All Books */}
+      <div>
+        <h3>All Books</h3>
+        {books.length === 0 ? (
+          <p>No books found.</p>
+        ) : (
+          <div className="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  {Object.keys(book).map((key) => (
+                    <th key={key}>{key}</th>
+                  ))}
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {books.map((b) => (
+                  <tr key={b.id}>
+                    {Object.keys(book).map((key) => (
+                      <td key={key}>{b[key]}</td>
+                    ))}
+                    <td>
+                      <div className="action-buttons">
+                        <button className="btn-green" onClick={() => handleEdit(b)}>Edit</button>
+                        <button className="btn-red" onClick={() => deleteBook(b.id)}>Delete</button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
